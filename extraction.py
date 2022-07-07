@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import numpy as np
 import torch
 import os
@@ -10,6 +8,7 @@ import torch.nn.functional as F
 import torchvision
 import pandas as pd
 from torch.utils.data import Dataset
+from collections import defaultdict
 from RFF_Dataset import LoRa_Dataset
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
@@ -38,19 +37,24 @@ def main():
 
     print(i_c1)
 
-    window1 = data_array[0:8195]
-    window2 = data_array[8195:16390]
-    window3 = data_array[16390:24585]
-    window4 = data_array[24585:32780]
-    i_c2 = imaginary_column[8195:16390]
-    i_c3 = imaginary_column[16390:24585]
-    i_c4 = imaginary_column[24585:32780]
+    # Create new dictionaries to hold the imaginary lists and the real lists
+    imaginary_dict = defaultdict(list)
+    real_dict = defaultdict(list)
 
-    r_c1 = reals_column[0:8195]
+    
+    # In a for loop create the window name
+    # and add to the dictionary with the data_array range
+    for i in range(0,3):
+        i_string = f"i_c{i+1}"
+        r_string = f"r_c{i+1}"
+        if(i== 0):
+                imaginary_dict[i_string].append(imaginary_column[i:(8190)])
+                real_dict[r_string].append(reals_column[i:(8190)])
+        else:
+                imaginary_dict[i_string].append(imaginary_column[(i*8190):(i+1)*8190])
+                real_dict[r_string].append(reals_column[(i*8190):(i+1)*8190])
 
-    r_c2 = reals_column[8195:16390]
-    r_c3 = reals_column[16390:24585]
-    r_c4 = reals_column[24585:32780]
+    
 
     dct = {}
 
@@ -61,10 +65,10 @@ def main():
     file_data.to_csv('/home/kalad/data/indoor/data_inside_day1__tran1_2.csv')
     
     # concatenate the two arrays as two columns in a matrix
-    df1 = pd.DataFrame({'col1':r_c1,'col2':i_c1})
-    df2 = pd.DataFrame({'col1':r_c2,'col2':i_c2})
-    df3 = pd.DataFrame({'col1':r_c3,'col2':i_c3})
-    df4 = pd.DataFrame({'col1':r_c4,'col2':i_c4})
+    df1 = pd.DataFrame({'col1':real_dict['r_c1'],'col2':imaginary_dict['i_c1']})
+    df2 = pd.DataFrame({'col1':real_dict['r_c2'],'col2':imaginary_dict['i_c2']})
+    df3 = pd.DataFrame({'col1':real_dict['r_c3'],'col2':imaginary_dict['i_c3']})
+    df4 = pd.DataFrame({'col1':real_dict['r_c4'],'col2':imaginary_dict['i_c4']})
 
     
     np.save(os.path.join('/home/kalad/data/indoor/','device1_window1'), df1)
@@ -238,4 +242,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
 
